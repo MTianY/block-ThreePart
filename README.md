@@ -1,4 +1,3 @@
-# README
 # __block
 
 ## 一. 改变变量的值的一般方式
@@ -327,6 +326,30 @@ static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
             NSLog((NSString *)&__NSConstantStringImpl__var_folders_w8_wnywnfxn7zldh13vnt816cmm0000gn_T_main_d5b4ce_mi_0,(age->__forwarding->age));
         }
 ```
+
+## 四 __block 的内存管理
+
+- 当 block 在栈上时, 不会对 `__block` 变量产生强引用
+- 当 block 被 copy 到堆上时
+    - 会调用 block 内部的 `__main_block_copy_0` 函数
+    - `__main_block_copy_0` 函数内部会调用 `__Block_object_assign` 函数
+    - `__Block_object_assign` 函数会对 `__block` 变量形成强引用
+
+    ```c++
+    static void __main_block_copy_0(struct __main_block_impl_0*dst, struct __main_block_impl_0*src) {
+    _Block_object_assign((void*)&dst->age, (void*)src->age, 8/*BLOCK_FIELD_IS_BYREF*/);
+    }
+    ``` 
+    
+- 当 block 从堆中移除的时候
+    - 会调用 block 内部的 `__main_block_dispose_0` 函数 
+    - `__main_block_dispose_0` 函数内部会调用 `_Block_object_dispose` 函数
+    - `_Block_object_dispose` 函数会自动释放引用的 `__block`变量
+
+    ```c++
+    static void __main_block_dispose_0(struct __main_block_impl_0*src) {_Block_object_dispose((void*)src->age, 8/*BLOCK_FIELD_IS_BYREF*/);
+}
+    ```
 
 
 
