@@ -329,6 +329,8 @@ static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
 
 ## 四 __block 的内存管理
 
+### 4.1 __block 修饰 auto 变量时
+
 - 当 block 在栈上时, 不会对 `__block` 变量产生强引用
 - 当 block 被 copy 到堆上时
     - 会调用 block 内部的 `__main_block_copy_0` 函数
@@ -347,9 +349,23 @@ static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
     - `_Block_object_dispose` 函数会自动释放引用的 `__block`变量
 
     ```c++
-    static void __main_block_dispose_0(struct __main_block_impl_0*src) {_Block_object_dispose((void*)src->age, 8/*BLOCK_FIELD_IS_BYREF*/);
-}
+        static void __main_block_dispose_0(struct __main_block_impl_0*src) {_Block_object_dispose((void*)src->age, 8/*BLOCK_FIELD_IS_BYREF*/);
+    }
     ```
+
+
+### 4.2 __block 修饰对象类型变量时
+
+- 当 __block 变量在栈上的时候,不会对指向的对象产生强引用.
+- 当 __block 变量被 copy 到堆上的时候
+    - 会调用 __block 变量内部的 copy 函数
+    - copy 函数内部会调用 `__Block_object_assign`函数
+    - `__Block_object_assign` 函数会根据所指向对象的修饰符(`__strong`, `__weak`, `__unsafe_unretained`) 做出相应的操作.形成强引用还是弱引用(retain 操作,仅在 ARC 下, MRC 下即使用`__block`修饰也不会 retain 操作) 
+
+- `__block` 变量从堆上移除时
+    - 会调用 `__block`变量内部的`dispose` 函数
+    - `dispose` 函数内部会调用 `__Block_object_dispose` 函数
+    - `__Block_object_dispose` 函数会自动释放指向的对象(release 操作) 
 
 
 
